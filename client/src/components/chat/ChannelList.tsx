@@ -81,7 +81,7 @@ const ChannelList: React.FC<ChannelListProps> = ({
     );
   };
 
-  const canCreateChannels = user?.roles.includes('admin') || user?.roles.includes('moderator');
+  const canCreateChannels = (user?.roles || []).includes('admin') || (user?.roles || []).includes('moderator');
 
   if (channelsLoading && channels.length === 0) {
     return (

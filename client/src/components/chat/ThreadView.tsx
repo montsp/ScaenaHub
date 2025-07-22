@@ -41,8 +41,8 @@ const ThreadMessage: React.FC<ThreadMessageProps> = ({
     const [reactionPickerPosition, setReactionPickerPosition] = useState({ top: 0, left: 0 });
 
     const isOwnMessage = message.userId === currentUser.id;
-    const canEdit = isOwnMessage || currentUser.roles.includes('admin') || currentUser.roles.includes('moderator');
-    const canDelete = isOwnMessage || currentUser.roles.includes('admin') || currentUser.roles.includes('moderator');
+    const canEdit = isOwnMessage || (currentUser.roles || []).includes('admin') || (currentUser.roles || []).includes('moderator');
+    const canDelete = isOwnMessage || (currentUser.roles || []).includes('admin') || (currentUser.roles || []).includes('moderator');
 
     const handleEdit = () => {
         if (onEdit && editContent.trim() !== message.content) {
@@ -99,7 +99,7 @@ const ThreadMessage: React.FC<ThreadMessageProps> = ({
 
     return (
         <div
-            className={`group p-3 hover:bg-secondary-50 transition-colors duration-200 ${message.mentions.includes(currentUser.username) ? 'bg-yellow-50 border-l-2 border-yellow-400' : ''
+            className={`group p-3 hover:bg-secondary-50 transition-colors duration-200 ${(message.mentions || []).includes(currentUser.username) ? 'bg-yellow-50 border-l-2 border-yellow-400' : ''
                 }`}
             onMouseEnter={() => setShowActions(true)}
             onMouseLeave={() => setShowActions(false)}
@@ -168,7 +168,7 @@ const ThreadMessage: React.FC<ThreadMessageProps> = ({
                                 <button
                                     key={index}
                                     onClick={() => onReaction?.(message.id, reaction.emoji)}
-                                    className={`inline-flex items-center px-1.5 py-0.5 text-xs rounded-full border transition-colors duration-200 ${reaction.users.includes(currentUser.id)
+                                    className={`inline-flex items-center px-1.5 py-0.5 text-xs rounded-full border transition-colors duration-200 ${(reaction.users || []).includes(currentUser.id)
                                         ? 'bg-primary-100 border-primary-300 text-primary-800'
                                         : 'bg-secondary-100 border-secondary-300 text-secondary-700 hover:bg-secondary-200'
                                         }`}
@@ -193,7 +193,7 @@ const ThreadMessage: React.FC<ThreadMessageProps> = ({
                                         size: attachment.size,
                                         url: attachment.url,
                                     }}
-                                    canDelete={isOwnMessage || currentUser.roles.includes('admin') || currentUser.roles.includes('moderator')}
+                                    canDelete={isOwnMessage || (currentUser.roles || []).includes('admin') || (currentUser.roles || []).includes('moderator')}
                                     onDelete={(fileId) => {
                                         console.log('Thread file deleted:', fileId);
                                     }}
@@ -382,7 +382,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
             const hasReacted = reaction?.users?.includes(user?.id || '');
             
             // Check if user already has a reaction on this message (one reaction per user limit)
-            const userCurrentReaction = message?.reactions?.find(r => r.users.includes(user?.id || ''));
+            const userCurrentReaction = message?.reactions?.find(r => (r.users || []).includes(user?.id || ''));
             
             console.log('🎭 Thread reaction state:', { reaction, hasReacted, userCurrentReaction });
 

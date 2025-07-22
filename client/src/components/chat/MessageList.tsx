@@ -43,8 +43,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isOwnMessage = message.userId === currentUser.id;
-  const canEdit = isOwnMessage || currentUser.roles.includes('admin') || currentUser.roles.includes('moderator');
-  const canDelete = isOwnMessage || currentUser.roles.includes('admin') || currentUser.roles.includes('moderator');
+  const canEdit = isOwnMessage || (currentUser.roles || []).includes('admin') || (currentUser.roles || []).includes('moderator');
+  const canDelete = isOwnMessage || (currentUser.roles || []).includes('admin') || (currentUser.roles || []).includes('moderator');
 
   const handleEdit = () => {
     if (onEdit && editContent.trim() !== message.content) {
@@ -111,7 +111,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   return (
     <div
       className={`group p-4 hover:bg-secondary-50 transition-colors duration-200 ${
-        message.mentions.includes(currentUser.username) ? 'bg-yellow-50 border-l-4 border-yellow-400' : ''
+        (message.mentions || []).includes(currentUser.username) ? 'bg-yellow-50 border-l-4 border-yellow-400' : ''
       }`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
@@ -181,7 +181,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   key={index}
                   onClick={() => onReaction?.(message.id, reaction.emoji)}
                   className={`inline-flex items-center px-2 py-1 text-xs rounded-full border transition-colors duration-200 ${
-                    reaction.users.includes(currentUser.id)
+                    (reaction.users || []).includes(currentUser.id)
                       ? 'bg-primary-100 border-primary-300 text-primary-800'
                       : 'bg-secondary-100 border-secondary-300 text-secondary-700 hover:bg-secondary-200'
                   }`}
@@ -206,7 +206,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     size: attachment.size,
                     url: attachment.url,
                   }}
-                  canDelete={isOwnMessage || currentUser.roles.includes('admin') || currentUser.roles.includes('moderator')}
+                  canDelete={isOwnMessage || (currentUser.roles || []).includes('admin') || (currentUser.roles || []).includes('moderator')}
                   onDelete={(fileId) => {
                     // Handle file deletion - could update message or remove attachment
                     console.log('File deleted:', fileId);
@@ -518,7 +518,7 @@ const MessageList: React.FC<MessageListProps> = ({
       const hasReacted = reaction?.users?.includes(user?.id || '');
       
       // Check if user already has a reaction on this message (one reaction per user limit)
-      const userCurrentReaction = message?.reactions?.find(r => r.users.includes(user?.id || ''));
+      const userCurrentReaction = message?.reactions?.find(r => (r.users || []).includes(user?.id || ''));
       
       console.log('🎭 Reaction state:', { reaction, hasReacted, userCurrentReaction });
 

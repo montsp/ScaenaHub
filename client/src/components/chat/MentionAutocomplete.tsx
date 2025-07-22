@@ -128,12 +128,12 @@ const MentionAutocomplete: React.FC<MentionAutocompleteProps> = ({
             </div>
             
             {/* Role badges */}
-            {user.roles.includes('admin') && (
+            {(user.roles || []).includes('admin') && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
                 管理者
               </span>
             )}
-            {user.roles.includes('moderator') && (
+            {(user.roles || []).includes('moderator') && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                 モデレーター
               </span>

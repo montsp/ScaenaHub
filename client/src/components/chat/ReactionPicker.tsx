@@ -121,7 +121,7 @@ const ReactionPicker: React.FC<ReactionPickerProps> = ({
       <div className="p-3 max-h-64 overflow-y-auto">
         <div className={`grid gap-1 ${isMobile ? 'grid-cols-6' : 'grid-cols-8'}`}>
           {EMOJI_CATEGORIES[activeCategory].map((emoji, index) => {
-            const hasReacted = currentUserReactions.includes(emoji);
+            const hasReacted = (currentUserReactions || []).includes(emoji);
             return (
               <button
                 key={`${emoji}-${index}`}
