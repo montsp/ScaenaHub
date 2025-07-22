@@ -99,9 +99,9 @@ class ApiService {
     return response.data;
   }
 
-  sendMessage = async (channelId: string, content: string, mentions: string[] = [], parentMessageId?: string, threadId?: string): Promise<ApiResponse<Message>> => {
+  sendMessage = async (channelId: string, content: string, mentions: string[] = [], attachments: any[] = [], parentMessageId?: string, threadId?: string): Promise<ApiResponse<Message>> => {
     const response: AxiosResponse<ApiResponse<Message>> = 
-      await this.api.post(`/messages`, { channelId, content, mentions, parentMessageId, threadId });
+      await this.api.post(`/messages`, { channelId, content, mentions, attachments, parentMessageId, threadId });
     return response.data;
   }
 
@@ -214,20 +214,7 @@ class ApiService {
     return response.data;
   }
 
-  // File endpoints
-  async uploadFile(file: File, channelId: string): Promise<ApiResponse<{ url: string; fileId: string }>> {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('channelId', channelId);
 
-    const response: AxiosResponse<ApiResponse<{ url: string; fileId: string }>> = 
-      await this.api.post('/files/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-    return response.data;
-  }
 
   // Backup endpoints (admin only)
   async triggerBackup(method: 'google_drive' | 'github' | 'both' = 'both'): Promise<ApiResponse> {

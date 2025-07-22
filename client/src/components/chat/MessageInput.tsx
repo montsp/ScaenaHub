@@ -40,10 +40,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     execute: sendMessage,
   } = useApi(apiService.sendMessage);
 
-  const {
-    loading: uploadLoading,
-    execute: uploadFile,
-  } = useApi(apiService.uploadFile);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   const { startTyping, stopTyping } = useSocket();
 
@@ -172,6 +169,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         channelId,
         messageContent,
         mentions,
+        [], // attachments
         threadId, // parentMessageId (for thread replies)
         threadId  // threadId (to identify which thread this belongs to)
       );
@@ -199,17 +197,33 @@ const MessageInput: React.FC<MessageInputProps> = ({
       return;
     }
 
+    setUploadLoading(true);
     try {
-      const result = await uploadFile(file, channelId);
-      if (result) {
-        // Send file message
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('channelId', channelId);
+      
+      const result = await apiService.uploadFile(formData);
+      if (result.success && result.data) {
+        // Send file message with attachment
         const fileMessage = `📎 ${file.name}`;
-        await sendMessage(channelId, fileMessage, []);
-        onMessageSent?.(result);
+        const attachments = [{
+          id: result.data.id || result.data.fileId,
+          filename: file.name,
+          mimeType: file.type,
+          size: file.size,
+          googleDriveId: result.data.googleDriveId || '',
+          url: result.data.url
+        }];
+        
+        await sendMessage(channelId, fileMessage, [], attachments);
+        onMessageSent?.(result.data);
       }
     } catch (error) {
       console.error('Failed to upload file:', error);
       alert('ファイルのアップロードに失敗しました');
+    } finally {
+      setUploadLoading(false);
     }
 
     // Reset file input
