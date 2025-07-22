@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "description": "ScaenaHub - 中学部演劇プロジェクト用Webコミュニケーションアプリ",
   "main": "dist/server.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "tsc",
+    "build:full": "npm run build && cd client && npm install && npm run build",
     "start": "node dist/server.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "postinstall": "cd client && npm install"
   },
   "keywords": [
     "chat",
@@ -36,7 +39,7 @@
     "socket.io": "^4.7.4"
   },
   "devDependencies": {
-    "@octokit/rest": "^22.0.0",
+    "@octokit/rest": "^19.0.13",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",

@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { Octokit } from '@octokit/rest';
+// Dynamic import for @octokit/rest to handle ESM compatibility
 import { supabase } from '../config/database';
 import { NotificationService } from './notification';
 
@@ -107,6 +107,7 @@ export const backupToGoogleDrive = async (filePath: string): Promise<any> => {
 // GitHubへバックアップ
 export const backupToGitHub = async (filePath: string): Promise<any> => {
   try {
+    const { Octokit } = await import('@octokit/rest');
     const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
     const repo = process.env.GITHUB_REPO;
     
