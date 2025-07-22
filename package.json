@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "ScaenaHub - 中学部演劇プロジェクト用Webコミュニケーションアプリ",
   "main": "dist/server.js",
-  "type": "module",
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "tsc",
