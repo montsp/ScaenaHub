@@ -8,6 +8,7 @@ import LoadingSpinner from '../LoadingSpinner';
 import ReactionPicker from './ReactionPicker';
 import ThreadView from './ThreadView';
 import ConfirmDialog from '../ConfirmDialog';
+import FilePreview from '../FilePreview';
 import { formatTime, getUserColor, highlightMentions } from '../../utils';
 
 interface MessageListProps {
@@ -196,22 +197,21 @@ const MessageItem: React.FC<MessageItemProps> = ({
           {message.attachments && message.attachments.length > 0 && (
             <div className="mt-2 space-y-2">
               {message.attachments.map((attachment) => (
-                <div
+                <FilePreview
                   key={attachment.id}
-                  className="flex items-center p-2 bg-secondary-100 rounded-lg"
-                >
-                  <svg className="h-4 w-4 mr-2 text-secondary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                  </svg>
-                  <a
-                    href={attachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary-600 hover:text-primary-700 truncate"
-                  >
-                    {attachment.filename}
-                  </a>
-                </div>
+                  file={{
+                    id: attachment.id,
+                    filename: attachment.filename,
+                    mimeType: attachment.mimeType,
+                    size: attachment.size,
+                    url: attachment.url,
+                  }}
+                  canDelete={isOwnMessage || currentUser.roles.includes('admin') || currentUser.roles.includes('moderator')}
+                  onDelete={(fileId) => {
+                    // Handle file deletion - could update message or remove attachment
+                    console.log('File deleted:', fileId);
+                  }}
+                />
               ))}
             </div>
           )}

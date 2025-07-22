@@ -98,3 +98,39 @@ export interface DatabaseStatus {
   provider: string;
   timestamp: string;
 }
+
+// Script types
+export interface ScriptElement {
+  type: 'character' | 'dialogue' | 'stage_direction' | 'scene_header' | 'act_header' | 'text';
+  content: string;
+  character?: string;
+  formatting?: {
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+  };
+}
+
+export interface ScriptScene {
+  id: string;
+  title: string;
+  elements: ScriptElement[];
+}
+
+export interface ScriptAct {
+  id: string;
+  title: string;
+  scenes: ScriptScene[];
+}
+
+export interface Script {
+  id: string;
+  title: string;
+  lastUpdated: Date;
+  acts: ScriptAct[];
+  metadata?: {
+    author?: string;
+    version?: string;
+    notes?: string;
+  };
+}

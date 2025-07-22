@@ -139,6 +139,41 @@ class ApiService {
     return response.data;
   }
 
+  // File endpoints
+  uploadFile = async (formData: FormData): Promise<ApiResponse<any>> => {
+    console.log('📁 API: Uploading file');
+    const response: AxiosResponse<ApiResponse<any>> = 
+      await this.api.post('/files/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    console.log('📁 API: Upload response', response.data);
+    return response.data;
+  }
+
+  downloadFile = async (fileId: string): Promise<Blob> => {
+    console.log('📁 API: Downloading file', fileId);
+    const response: AxiosResponse<Blob> = 
+      await this.api.get(`/files/${fileId}/download`, {
+        responseType: 'blob',
+      });
+    return response.data;
+  }
+
+  getFileInfo = async (fileId: string): Promise<ApiResponse<any>> => {
+    const response: AxiosResponse<ApiResponse<any>> = 
+      await this.api.get(`/files/${fileId}`);
+    return response.data;
+  }
+
+  deleteFile = async (fileId: string): Promise<ApiResponse<any>> => {
+    console.log('📁 API: Deleting file', fileId);
+    const response: AxiosResponse<ApiResponse<any>> = 
+      await this.api.delete(`/files/${fileId}`);
+    return response.data;
+  }
+
   
 
   // User endpoints

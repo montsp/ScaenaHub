@@ -8,6 +8,7 @@ import { MAX_MESSAGE_LENGTH } from '../../constants';
 import { User } from '../../types';
 import MentionAutocomplete from './MentionAutocomplete';
 
+
 interface MessageInputProps {
   channelId: string;
   threadId?: string;
@@ -30,6 +31,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   const [showMentionAutocomplete, setShowMentionAutocomplete] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

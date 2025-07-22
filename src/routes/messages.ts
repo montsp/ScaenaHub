@@ -556,13 +556,7 @@ router.get('/thread/:parentId',
 
       res.json({
         success: true,
-        data: {
-          parentMessage: {
-            ...parentMessage,
-            user: await UserModel.findById(parentMessage.userId)
-          },
-          replies: messagesWithUsers
-        }
+        data: messagesWithUsers
       });
     } catch (error) {
       console.error('Get thread messages error:', error);

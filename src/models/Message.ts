@@ -402,7 +402,7 @@ export class MessageModel {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .eq('parent_message_id', parentMessageId)
+        .eq('thread_id', parentMessageId)
         .order('created_at', { ascending: true });
 
       if (error) {

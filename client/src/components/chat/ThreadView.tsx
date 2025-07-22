@@ -7,6 +7,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../LoadingSpinner';
 import MessageInput from './MessageInput';
 import ConfirmDialog from '../ConfirmDialog';
+import ReactionPicker from './ReactionPicker';
+import FilePreview from '../FilePreview';
 import { formatTime, getUserColor, highlightMentions } from '../../utils';
 
 interface ThreadViewProps {
@@ -35,6 +37,8 @@ const ThreadMessage: React.FC<ThreadMessageProps> = ({
     const [editContent, setEditContent] = useState(message.content);
     const [showActions, setShowActions] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showReactionPicker, setShowReactionPicker] = useState(false);
+    const [reactionPickerPosition, setReactionPickerPosition] = useState({ top: 0, left: 0 });
 
     const isOwnMessage = message.userId === currentUser.id;
     const canEdit = isOwnMessage || currentUser.roles.includes('admin') || currentUser.roles.includes('moderator');
@@ -57,6 +61,39 @@ const ThreadMessage: React.FC<ThreadMessageProps> = ({
         }
     };
 
+    const handleReactionPickerToggle = (e: React.MouseEvent) => {
+        console.log('🎭 Thread reaction picker toggle clicked');
+        e.stopPropagation();
+        e.preventDefault();
+        
+        const rect = e.currentTarget.getBoundingClientRect();
+        const pickerHeight = 400;
+        
+        let top = rect.top - pickerHeight - 10;
+        if (top < 10) {
+            top = rect.bottom + 10;
+        }
+        
+        let left = rect.left;
+        if (left + 320 > window.innerWidth) {
+            left = window.innerWidth - 320 - 10;
+        }
+        
+        setReactionPickerPosition({ top, left });
+        setShowReactionPicker(prev => !prev);
+    };
+
+    const handleReactionSelect = (emoji: string) => {
+        console.log('🎭 Thread reaction selected:', emoji, 'for message:', message.id);
+        onReaction?.(message.id, emoji);
+        setShowReactionPicker(false);
+    };
+
+    // Get current user's reactions for this message
+    const currentUserReactions = message.reactions
+        ?.filter(r => r.users.includes(currentUser.id))
+        .map(r => r.emoji) || [];
+
     const userDisplayName = message.user?.displayName || message.user?.username || 'Unknown User';
     const userColor = getUserColor(message.userId);
 
@@ -66,6 +103,7 @@ const ThreadMessage: React.FC<ThreadMessageProps> = ({
                 }`}
             onMouseEnter={() => setShowActions(true)}
             onMouseLeave={() => setShowActions(false)}
+            onTouchStart={() => setShowActions(true)}
         >
             <div className="flex space-x-2">
                 {/* User Avatar */}
@@ -141,11 +179,45 @@ const ThreadMessage: React.FC<ThreadMessageProps> = ({
                             ))}
                         </div>
                     )}
+
+                    {/* Attachments */}
+                    {message.attachments && message.attachments.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                            {message.attachments.map((attachment) => (
+                                <FilePreview
+                                    key={attachment.id}
+                                    file={{
+                                        id: attachment.id,
+                                        filename: attachment.filename,
+                                        mimeType: attachment.mimeType,
+                                        size: attachment.size,
+                                        url: attachment.url,
+                                    }}
+                                    canDelete={isOwnMessage || currentUser.roles.includes('admin') || currentUser.roles.includes('moderator')}
+                                    onDelete={(fileId) => {
+                                        console.log('Thread file deleted:', fileId);
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Message Actions */}
-                {showActions && (canEdit || canDelete) && (
+                {showActions && (
                     <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        {/* Reaction Button */}
+                        <button
+                            onClick={handleReactionPickerToggle}
+                            className="p-1 text-secondary-400 hover:text-secondary-600 transition-colors duration-200"
+                            title="リアクション"
+                            type="button"
+                        >
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
+
                         {canEdit && (
                             <button
                                 onClick={() => setIsEditing(true)}
@@ -159,9 +231,14 @@ const ThreadMessage: React.FC<ThreadMessageProps> = ({
                         )}
                         {canDelete && (
                             <button
-                                onClick={() => setShowDeleteConfirm(true)}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setShowDeleteConfirm(true);
+                                }}
                                 className="p-1 text-secondary-400 hover:text-red-600 transition-colors duration-200"
                                 title="削除"
+                                type="button"
                             >
                                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -171,6 +248,15 @@ const ThreadMessage: React.FC<ThreadMessageProps> = ({
                     </div>
                 )}
             </div>
+
+            {/* Reaction Picker */}
+            <ReactionPicker
+                onSelect={handleReactionSelect}
+                onClose={() => setShowReactionPicker(false)}
+                isVisible={showReactionPicker}
+                position={reactionPickerPosition}
+                currentUserReactions={currentUserReactions}
+            />
 
             {/* Delete Confirmation Dialog */}
             <ConfirmDialog
@@ -275,25 +361,43 @@ const ThreadView: React.FC<ThreadViewProps> = ({
     }, []);
 
     const handleDeleteMessage = useCallback(async (messageId: string) => {
-        if (window.confirm('このメッセージを削除しますか？')) {
-            try {
-                await apiService.deleteMessage(messageId);
-                setThreadMessages(prev => (prev || []).filter(msg => msg.id !== messageId));
-            } catch (error) {
-                console.error('Failed to delete message:', error);
-            }
+        try {
+            console.log('🗑️ Deleting thread message:', messageId);
+            await apiService.deleteMessage(messageId);
+            setThreadMessages(prev => (prev || []).filter(msg => msg.id !== messageId));
+            console.log('✅ Thread message deleted successfully');
+        } catch (error) {
+            console.error('❌ Failed to delete thread message:', error);
         }
     }, []);
 
     const handleReaction = useCallback(async (messageId: string, emoji: string) => {
+        console.log('🎭 Thread handling reaction:', { messageId, emoji, userId: user?.id });
         try {
             const message = threadMessages.find(m => m.id === messageId);
-            const reaction = message?.reactions.find(r => r.emoji === emoji);
-            const hasReacted = reaction?.users.includes(user?.id || '');
+            console.log('🎭 Thread found message:', message);
+            console.log('🎭 Thread message reactions:', message?.reactions);
+            
+            const reaction = message?.reactions?.find(r => r.emoji === emoji);
+            const hasReacted = reaction?.users?.includes(user?.id || '');
+            
+            // Check if user already has a reaction on this message (one reaction per user limit)
+            const userCurrentReaction = message?.reactions?.find(r => r.users.includes(user?.id || ''));
+            
+            console.log('🎭 Thread reaction state:', { reaction, hasReacted, userCurrentReaction });
 
             if (hasReacted) {
+                // Remove existing reaction
+                console.log('🎭 Thread removing reaction');
                 await apiService.removeReaction(messageId, emoji);
-            } else {
+            } else if (userCurrentReaction && userCurrentReaction.emoji !== emoji) {
+                // User already has a different reaction, replace it
+                console.log('🎭 Thread replacing existing reaction');
+                await apiService.removeReaction(messageId, userCurrentReaction.emoji);
+                await apiService.addReaction(messageId, emoji);
+            } else if (!userCurrentReaction) {
+                // Add new reaction (user has no existing reaction)
+                console.log('🎭 Thread adding new reaction');
                 await apiService.addReaction(messageId, emoji);
             }
 
@@ -301,32 +405,70 @@ const ThreadView: React.FC<ThreadViewProps> = ({
             setThreadMessages(prev =>
                 (prev || []).map(msg => {
                     if (msg.id === messageId) {
-                        const updatedReactions = msg.reactions.map(r => {
-                            if (r.emoji === emoji) {
-                                const newUsers = hasReacted
-                                    ? r.users.filter(id => id !== user?.id)
-                                    : [...r.users, user?.id || ''];
-                                return { ...r, users: newUsers, count: newUsers.length };
-                            }
-                            return r;
-                        });
+                        const currentReactions = msg.reactions || [];
+                        let updatedReactions = [...currentReactions];
 
-                        // Add new reaction if it doesn't exist
-                        if (!updatedReactions.find(r => r.emoji === emoji) && !hasReacted) {
-                            updatedReactions.push({
-                                emoji,
-                                users: [user?.id || ''],
-                                count: 1,
+                        if (hasReacted) {
+                            // Remove the reaction
+                            updatedReactions = updatedReactions.map((r: any) => {
+                                if (r.emoji === emoji) {
+                                    const newUsers = r.users.filter((id: string) => id !== user?.id);
+                                    return { ...r, users: newUsers, count: newUsers.length };
+                                }
+                                return r;
                             });
+                        } else if (userCurrentReaction && userCurrentReaction.emoji !== emoji) {
+                            // Replace existing reaction
+                            updatedReactions = updatedReactions.map((r: any) => {
+                                if (r.emoji === userCurrentReaction.emoji) {
+                                    // Remove from old reaction
+                                    const newUsers = r.users.filter((id: string) => id !== user?.id);
+                                    return { ...r, users: newUsers, count: newUsers.length };
+                                } else if (r.emoji === emoji) {
+                                    // Add to new reaction
+                                    const newUsers = [...r.users, user?.id || ''];
+                                    return { ...r, users: newUsers, count: newUsers.length };
+                                }
+                                return r;
+                            });
+
+                            // Add new reaction if it doesn't exist
+                            if (!updatedReactions.find((r: any) => r.emoji === emoji)) {
+                                updatedReactions.push({
+                                    emoji,
+                                    users: [user?.id || ''],
+                                    count: 1,
+                                });
+                            }
+                        } else if (!userCurrentReaction) {
+                            // Add new reaction
+                            const existingReaction = updatedReactions.find((r: any) => r.emoji === emoji);
+                            if (existingReaction) {
+                                updatedReactions = updatedReactions.map((r: any) => {
+                                    if (r.emoji === emoji) {
+                                        const newUsers = [...r.users, user?.id || ''];
+                                        return { ...r, users: newUsers, count: newUsers.length };
+                                    }
+                                    return r;
+                                });
+                            } else {
+                                updatedReactions.push({
+                                    emoji,
+                                    users: [user?.id || ''],
+                                    count: 1,
+                                });
+                            }
                         }
 
-                        return { ...msg, reactions: updatedReactions.filter(r => r.count > 0) };
+                        const finalReactions = updatedReactions.filter((r: any) => r.count > 0);
+                        console.log('🎭 Thread updated reactions:', finalReactions);
+                        return { ...msg, reactions: finalReactions };
                     }
                     return msg;
                 })
             );
         } catch (error) {
-            console.error('Failed to toggle reaction:', error);
+            console.error('Failed to toggle thread reaction:', error);
         }
     }, [threadMessages, user?.id]);
 
