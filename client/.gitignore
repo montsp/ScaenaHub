@@ -9,7 +9,7 @@
 /coverage
 
 # production
-# /build  # Commented out to include build directory in Git
+/build
 
 # misc
 .DS_Store
