@@ -4,6 +4,7 @@ import { useApi } from '../../hooks/useApi';
 import { useSocket } from '../../hooks/useSocket';
 import { apiService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useProfile } from '../../contexts/ProfileContext';
 import LoadingSpinner from '../LoadingSpinner';
 import ReactionPicker from './ReactionPicker';
 import ThreadView from './ThreadView';
@@ -35,6 +36,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   onReaction,
   onStartThread,
 }) => {
+  const { showProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
   const [showActions, setShowActions] = useState(false);
@@ -119,7 +121,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
     >
       <div className="flex space-x-3">
         {/* User Avatar */}
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${userColor}`}>
+        <div 
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${userColor} cursor-pointer`}
+          onClick={() => message.userId && showProfile(message.userId)}
+        >
           {userDisplayName.charAt(0).toUpperCase()}
         </div>
 
@@ -127,7 +132,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
         <div className="flex-1 min-w-0">
           {/* Message Header */}
           <div className="flex items-center space-x-2 mb-1">
-            <span className="font-medium text-secondary-900">{userDisplayName}</span>
+            <span 
+              className="font-medium text-secondary-900 cursor-pointer hover:underline"
+              onClick={() => message.userId && showProfile(message.userId)}
+            >
+              {userDisplayName}
+            </span>
             <span className="text-xs text-secondary-500">{formatTime(message.createdAt)}</span>
             {message.isEdited && (
               <span className="text-xs text-secondary-400">(編集済み)</span>

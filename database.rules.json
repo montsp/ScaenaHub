@@ -1,0 +1,36 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    
+    "presence": {
+      "$channelId": {
+        "$userId": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.uid == $userId"
+        }
+      }
+    },
+    
+    "typing": {
+      "$channelId": {
+        "$userId": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.uid == $userId"
+        }
+      }
+    },
+    
+    "notifications": {
+      "$userId": {
+        ".read": "auth != null && auth.uid == $userId",
+        ".write": "auth != null"
+      }
+    },
+    
+    "_test": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
