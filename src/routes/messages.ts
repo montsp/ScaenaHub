@@ -99,6 +99,14 @@ router.post('/',
       const user = req.user!;
       const { content, channelId, type, threadId, parentMessageId, attachments } = req.body;
 
+      console.log('🔍 Message creation attempt:', {
+        userId: user.id,
+        username: user.username,
+        userRoles: user.roles,
+        channelId,
+        content: content.substring(0, 50) + '...'
+      });
+
       // Check if user has access to the channel
       const hasAccess = await ChannelModel.canUserAccess(
         channelId,
@@ -106,7 +114,10 @@ router.post('/',
         'write'
       );
 
+      console.log('🔍 Channel access result:', hasAccess);
+
       if (!hasAccess) {
+        console.log('❌ Access denied for user:', user.username, 'to channel:', channelId);
         res.status(403).json({
           success: false,
           error: 'You do not have permission to post in this channel'

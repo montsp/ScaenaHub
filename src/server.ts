@@ -36,12 +36,42 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    service: 'ScaenaHub API'
-  });
+app.get('/health', async (req, res) => {
+  try {
+    // Get Supabase status (legacy)
+    const { getDatabaseStatus } = await import('./config/database');
+    const supabaseStatus = await getDatabaseStatus();
+    
+    // Get Firebase status if available
+    let firebaseStatus = { connected: false, provider: 'Firebase', message: 'Not configured' };
+    try {
+      const { getFirebaseStatus, isFirebaseConfigured } = await import('./config/firebase');
+      if (isFirebaseConfigured) {
+        firebaseStatus = await getFirebaseStatus();
+      }
+    } catch (error) {
+      console.error('Firebase status check error:', error);
+    }
+    
+    res.status(200).json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      service: 'ScaenaHub API',
+      databases: {
+        legacy: supabaseStatus,
+        firebase: firebaseStatus
+      }
+    });
+  } catch (error) {
+    res.status(200).json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      service: 'ScaenaHub API',
+      databases: { 
+        error: 'Failed to get database status'
+      }
+    });
+  }
 });
 
 // Import routes
@@ -103,9 +133,24 @@ cron.schedule(process.env.BACKUP_SCHEDULE || '0 2 * * *', () => {
 
 // Start server only if not in test environment
 if (process.env.NODE_ENV !== 'test') {
-  server.listen(PORT, () => {
+  server.listen(PORT, async () => {
     console.log(`🚀 ScaenaHub server running on port ${PORT}`);
     console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
+    
+    // Test database connections
+    try {
+      // Test Supabase connection (legacy)
+      const { testDatabaseConnection } = await import('./config/database');
+      const isSupabaseConnected = await testDatabaseConnection();
+      
+      if (isSupabaseConnected) {
+        console.log('✅ Legacy database (Supabase) connected successfully');
+      } else {
+        console.log('⚠️  Legacy database connection failed - check Supabase configuration');
+      }
+    } catch (error) {
+      console.error('❌ Database connection error:', error);
+    }
   });
 }
 
