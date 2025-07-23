@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Channel, Message } from '../types';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../contexts/AuthContext';
-import { useProfile } from '../contexts/ProfileContext';
 import ChannelList from '../components/chat/ChannelList';
 import MessageList from '../components/chat/MessageList';
 import MessageInput from '../components/chat/MessageInput';
-import UserAvatar from '../components/UserAvatar';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { STORAGE_KEYS } from '../constants';
 
@@ -103,24 +101,12 @@ const ChatPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Connection status and User Avatar */}
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-xs text-secondary-500 hidden sm:inline">
-                    {isConnected ? '接続中' : '切断中'}
-                  </span>
-                </div>
-                
-                {user && (
-                  <div className="relative group">
-                    <UserAvatar 
-                      userId={user.id} 
-                      displayName={user.displayName} 
-                      size="sm" 
-                    />
-                  </div>
-                )}
+              {/* Connection status */}
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+                <span className="text-xs text-secondary-500 hidden sm:inline">
+                  {isConnected ? '接続中' : '切断中'}
+                </span>
               </div>
             </div>
 

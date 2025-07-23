@@ -1,14 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ProfileProvider, useProfile } from './contexts/ProfileContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ChatPage from './pages/ChatPage';
-import AdminPage from './pages/AdminPage';
 import LoadingSpinner from './components/LoadingSpinner';
-import UserProfile from './components/UserProfile';
 
 // Protected Route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -66,16 +63,6 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/admin/*"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <AdminPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
 
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/chat" replace />} />
@@ -87,31 +74,13 @@ const AppRoutes: React.FC = () => {
   );
 };
 
-// Profile Component Wrapper
-const ProfileWrapper: React.FC = () => {
-  const { selectedUserId, isProfileVisible, hideProfile } = useProfile();
-  
-  if (!selectedUserId) return null;
-  
-  return (
-    <UserProfile 
-      userId={selectedUserId} 
-      isOpen={isProfileVisible} 
-      onClose={hideProfile} 
-    />
-  );
-};
-
 // Main App component
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <ProfileProvider>
-        <div className="App min-h-screen bg-secondary-50">
-          <AppRoutes />
-          <ProfileWrapper />
-        </div>
-      </ProfileProvider>
+      <div className="App min-h-screen bg-secondary-50">
+        <AppRoutes />
+      </div>
     </AuthProvider>
   );
 };

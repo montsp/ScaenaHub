@@ -7,7 +7,6 @@ import { setupSocketServer } from './socket/server';
 import rateLimit from 'express-rate-limit';
 import cron from 'node-cron';
 import { performBackup } from './services/backup';
-import { testFirebaseConnection, getFirebaseStatus } from './config/firebase';
 
 // Load environment variables
 dotenv.config();
@@ -37,26 +36,12 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
-app.get('/health', async (req, res) => {
-  try {
-    const firebaseStatus = await getFirebaseStatus();
-    res.status(200).json({ 
-      status: 'OK', 
-      timestamp: new Date().toISOString(),
-      service: 'ScaenaHub API',
-      database: firebaseStatus
-    });
-  } catch (error) {
-    res.status(200).json({ 
-      status: 'OK', 
-      timestamp: new Date().toISOString(),
-      service: 'ScaenaHub API',
-      database: { 
-        connected: false, 
-        error: 'Firebase configuration not available' 
-      }
-    });
-  }
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    service: 'ScaenaHub API'
+  });
 });
 
 // Import routes
@@ -118,22 +103,9 @@ cron.schedule(process.env.BACKUP_SCHEDULE || '0 2 * * *', () => {
 
 // Start server only if not in test environment
 if (process.env.NODE_ENV !== 'test') {
-  server.listen(PORT, async () => {
+  server.listen(PORT, () => {
     console.log(`🚀 ScaenaHub server running on port ${PORT}`);
     console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
-    
-    // Test Firebase connection on startup
-    try {
-      const isConnected = await testFirebaseConnection();
-      if (isConnected) {
-        console.log('🔥 Firebase services initialized successfully');
-      } else {
-        console.log('⚠️  Firebase connection test failed - check configuration');
-      }
-    } catch (error) {
-      console.log('⚠️  Firebase not configured - using legacy database');
-      console.log('   Run: npm run setup:firebase for Firebase setup instructions');
-    }
   });
 }
 
